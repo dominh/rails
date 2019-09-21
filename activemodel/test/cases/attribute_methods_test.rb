@@ -145,6 +145,19 @@ class AttributeMethodsTest < ActiveModel::TestCase
     ModelWithWeirdNamesAttributes.undefine_attribute_methods
   end
 
+  test "#define_attribute_method does not allow for code injection" do
+    tmp_store = $global_variable_set_by_injected_code_execution
+    $global_variable_set_by_injected_code_execution = nil
+    payload = "'){};$global_variable_set_by_injected_code_execution = true;define_method(:'"
+
+    ModelWithAttributes.define_attribute_method(payload.to_sym)
+
+    assert_nil $global_variable_set_by_injected_code_execution
+  ensure
+    $global_variable_set_true_by_injected_code_execution = tmp_store
+    ModelWithAttributes.undefine_attribute_methods
+  end
+
   test "#define_attribute_methods works passing multiple arguments" do
     ModelWithAttributes.define_attribute_methods(:foo, :baz)
 
